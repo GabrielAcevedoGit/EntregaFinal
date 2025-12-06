@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto Final TalentoTech</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-img {
+            height: 200px;
+            object-fit: contain;
+            width: 100%;
+            padding: 10px;
+            background-color: #fff;
+        }
+        .hidden { display: none; }
+        .cart-badge { position: relative; top: -10px; left: -10px; font-size: 0.7rem; }
+        .card { transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        body { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#" onclick="mostrarSeccion('catalogo')">🚀 Mi Tienda TalentoTech</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" onclick="mostrarSeccion('catalogo')">Catálogo</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="mostrarSeccion('admin')">Administrar</a>
+                </li>
+                <li class="nav-item ms-2">
+                    <button class="btn btn-outline-light position-relative" onclick="mostrarSeccion('carrito')">
+                        🛒 Carrito
+                        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            0
+                        </span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4 mb-5">
+
+    <div id="seccion-catalogo">
+        <h2 class="mb-4 border-bottom pb-2">📦 Productos Disponibles</h2>
+        <div class="row" id="contenedor-productos">
+            <div class="text-center mt-5"><div class="spinner-border text-primary"></div> Cargando...</div>
+        </div>
+    </div>
+
+    <div id="seccion-admin" class="hidden">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">➕ Agregar Nuevo Producto</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-producto">
+                            <div class="mb-3">
+                                <label class="form-label">Nombre del Producto</label>
+                                <input type="text" class="form-control" id="nombre" placeholder="Ej: Laptop Gamer" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Precio</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="precio" step="0.01" placeholder="0.00" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Stock Inicial</label>
+                                    <input type="number" class="form-control" id="stock" placeholder="0" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Imagen del Producto</label>
+                                <input type="file" class="form-control" id="input-imagen" accept="image/*">
+                                <input type="hidden" id="imagen-base64">
+                                <div class="mt-2 text-center">
+                                    <img id="vista-previa" src="" class="img-thumbnail d-none" style="max-height: 150px;">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 btn-lg">Guardar Producto</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="seccion-carrito" class="hidden">
+        <h2 class="mb-4 border-bottom pb-2">🛒 Tu Carrito de Compras</h2>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabla-carrito">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="carrito-vacio-mensaje" class="text-center py-4 d-none">
+                    <p class="text-muted fs-5">Tu carrito está vacío 😢</p>
+                    <button class="btn btn-primary btn-sm" onclick="mostrarSeccion('catalogo')">Ir a comprar</button>
+                </div>
+
+                <div id="resumen-compra" class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <h3 class="fw-bold">Total: $<span id="total-carrito">0.00</span></h3>
+                    <button class="btn btn-success btn-lg px-5" onclick="finalizarCompra()">
+                        ✅ Confirmar Compra
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="mensajeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitulo">Notificación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="icono-modal" class="fs-1 mb-2"></div>
+                <p id="modalMensaje" class="fs-5 mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const URL_BASE = "http://localhost:8080";
+    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+
+    function mostrarNotificacion(titulo, mensaje, tipo = 'info') {
+        const modalElemento = document.getElementById('mensajeModal');
+        const tituloEl = document.getElementById('modalTitulo');
+        const mensajeEl = document.getElementById('modalMensaje');
+        const iconoEl = document.getElementById('icono-modal');
+
+        tituloEl.innerText = titulo;
+        mensajeEl.innerText = mensaje;
+
+        // Estilos según tipo
+        tituloEl.className = "modal-title fw-bold";
+        if (tipo === 'exito') {
+            tituloEl.classList.add('text-success');
+            iconoEl.innerHTML = '🎉';
+        } else if (tipo === 'error') {
+            tituloEl.classList.add('text-danger');
+            iconoEl.innerHTML = '❌';
+        } else {
+            tituloEl.classList.add('text-primary');
+            iconoEl.innerHTML = 'ℹ️';
+        }
+
+        const modal = new bootstrap.Modal(modalElemento);
+        modal.show();
+    }
+
+    function mostrarSeccion(seccion) {
+        ['catalogo', 'admin', 'carrito'].forEach(id => {
+            document.getElementById('seccion-' + id).classList.add('hidden');
+        });
+
+        document.getElementById('seccion-' + seccion).classList.remove('hidden');
+
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+
+        if(seccion === 'catalogo') cargarProductos();
+        if(seccion === 'carrito') renderizarCarrito();
+    }
+
+    async function cargarProductos() {
+        try {
+            const res = await fetch(`${URL_BASE}/productos`);
+            const productos = await res.json();
+            const contenedor = document.getElementById('contenedor-productos');
+
+            contenedor.innerHTML = '';
+
+            if(productos.length === 0) {
+                contenedor.innerHTML = '<div class="alert alert-info text-center">No hay productos disponibles. ¡Ve a Admin y crea uno!</div>';
+                return;
+            }
+
+            productos.forEach(prod => {
+                const imgUrl = prod.image && prod.image.length > 10 ? prod.image : 'https://via.placeholder.com/300x200?text=Sin+Imagen';
+
+                contenedor.innerHTML += `
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 shadow-sm border-0">
+                            <img src="${imgUrl}" class="card-img-top product-img" alt="${prod.name}">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title fw-bold">${prod.name}</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-secondary">Stock: ${prod.stock}</span>
+                                    <h4 class="text-primary mb-0">$${prod.price}</h4>
+                                </div>
+
+                                <div class="mt-auto">
+                                    <div class="input-group">
+                                        <input type="number" class="form-control text-center" value="1" min="1" max="${prod.stock}" id="cant-${prod.id}">
+                                        <button class="btn btn-primary" onclick="agregarAlCarrito(${prod.id}, '${prod.name}', ${prod.price}, ${prod.stock})">
+                                            Agregar 🛒
+                                        </button>
+                                    </div>
+                                    ${prod.stock === 0 ? '<small class="text-danger d-block mt-1 text-center">¡Agotado!</small>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } catch (error) {
+            console.error(error);
+            contenedor.innerHTML = '<div class="alert alert-danger">Error cargando productos. ¿El servidor está prendido?</div>';
+        }
+    }
+
+    document.getElementById('input-imagen').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                document.getElementById('imagen-base64').value = evt.target.result;
+                const preview = document.getElementById('vista-previa');
+                preview.src = evt.target.result;
+                preview.classList.remove('d-none');
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('form-producto').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const nuevoProd = {
+            name: document.getElementById('nombre').value,
+            price: parseFloat(document.getElementById('precio').value),
+            stock: parseInt(document.getElementById('stock').value),
+            image: document.getElementById('imagen-base64').value
+        };
+
+        try {
+            const res = await fetch(`${URL_BASE}/productos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevoProd)
+            });
+
+            if (res.ok) {
+                mostrarNotificacion('¡Éxito!', 'Producto creado correctamente', 'exito');
+                document.getElementById('form-producto').reset();
+                document.getElementById('vista-previa').classList.add('d-none');
+                document.getElementById('imagen-base64').value = "";
+            } else {
+                const data = await res.json();
+                mostrarNotificacion('Error', data.error || 'No se pudo crear', 'error');
+            }
+        } catch (error) {
+            mostrarNotificacion('Error', 'Fallo de conexión', 'error');
+        }
+    });
+
+    function agregarAlCarrito(id, nombre, precio, stockMax) {
+        if(stockMax === 0) {
+            mostrarNotificacion('Stock', 'Este producto está agotado', 'error');
+            return;
+        }
+
+        const inputCant = document.getElementById(`cant-${id}`);
+        const cantidad = parseInt(inputCant.value);
+
+        if(cantidad <= 0) {
+            mostrarNotificacion('Atención', 'La cantidad debe ser mayor a 0', 'error');
+            return;
+        }
+
+        const itemExistente = carrito.find(i => i.id === id);
+        const cantidadActualEnCarrito = itemExistente ? itemExistente.cantidad : 0;
+
+        if (cantidad + cantidadActualEnCarrito > stockMax) {
+            mostrarNotificacion('Stock Insuficiente', `Solo quedan ${stockMax} unidades y ya tienes ${cantidadActualEnCarrito} en el carrito.`, 'error');
+            return;
+        }
+
+        if (itemExistente) {
+            itemExistente.cantidad += cantidad;
+        } else {
+            carrito.push({ id, nombre, precio, cantidad });
+        }
+
+        actualizarBadge();
+        mostrarNotificacion('Carrito', `Se agregaron ${cantidad} unidades de ${nombre}`, 'exito');
+    }
+
+    function actualizarBadge() {
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+        document.getElementById('cart-count').innerText = carrito.length;
+    }
+
+    function renderizarCarrito() {
+        const tbody = document.getElementById('tabla-carrito');
+        const resumenDiv = document.getElementById('resumen-compra');
+        const vacioDiv = document.getElementById('carrito-vacio-mensaje');
+
+        tbody.innerHTML = '';
+        let total = 0;
+
+        if(carrito.length === 0) {
+            vacioDiv.classList.remove('d-none');
+            resumenDiv.classList.add('d-none');
+            return;
+        }
+
+        vacioDiv.classList.add('d-none');
+        resumenDiv.classList.remove('d-none');
+
+        carrito.forEach((item, index) => {
+            const subtotal = item.precio * item.cantidad;
+            total += subtotal;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.nombre}</td>
+                    <td>$${item.precio}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="cambiarCant(${index}, -1)">-</button>
+                        <span class="mx-2">${item.cantidad}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="cambiarCant(${index}, 1)">+</button>
+                    </td>
+                    <td>$${subtotal.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('total-carrito').innerText = total.toFixed(2);
+    }
+
+    function cambiarCant(index, delta) {
+        carrito[index].cantidad += delta;
+        if(carrito[index].cantidad <= 0) {
+            carrito.splice(index, 1);
+        }
+        actualizarBadge();
+        renderizarCarrito();
+    }
+
+    function eliminarDelCarrito(index) {
+        carrito.splice(index, 1);
+        actualizarBadge();
+        renderizarCarrito();
+    }
+
+    async function finalizarCompra() {
+        if(carrito.length === 0) return;
+
+        const pedidoDTO = {
+            items: carrito.map(item => ({
+                productoId: item.id,
+                cantidad: item.cantidad
+            }))
+        };
+
+        try {
+            const res = await fetch(`${URL_BASE}/pedidos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pedidoDTO)
+            });
+
+            if (res.ok) {
+                const pedido = await res.json();
+                mostrarNotificacion('¡Compra Realizada! 🥳', `Tu pedido #${pedido.id} por $${pedido.total} ha sido confirmado.`, 'exito');
+
+                carrito = [];
+                actualizarBadge();
+                mostrarSeccion('catalogo');
+            } else {
+                const errorData = await res.json();
+                mostrarNotificacion('Error en la compra', errorData.error, 'error');
+            }
+        } catch (error) {
+            mostrarNotificacion('Error Crítico', 'No se pudo conectar con el servidor', 'error');
+        }
+    }
+
+    cargarProductos();
+    actualizarBadge();
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
